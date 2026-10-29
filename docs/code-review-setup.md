@@ -1,0 +1,38 @@
+# مراجعة الكود التلقائية بـ Claude
+
+مع كل Pull Request (عند فتحه، وعند كل push جديد عليه، وعند إعادة فتحه) يشغّل `.github/workflows/claude-code-review.yml`
+مراجعة بـ Claude، فتظهر على الـ PR:
+- تعليق «جارٍ العمل» يتحدّث أثناء المراجعة،
+- تعليقات على الأسطر التي فيها مشاكل،
+- تعليق ملخّص بالمشاكل مرتبة حسب الخطورة والحكم النهائي، بالعربية.
+
+مسودات الـ PR (Draft) لا تُراجَع حتى تُعلَّم «Ready for review».
+
+## الإعداد (مرة واحدة)
+تحتاج المراجعة إلى سرّ واحد في المستودع: **Settings → Secrets and variables → Actions → New repository secret**
+
+- **باشتراك Claude (Pro أو Max):** على حاسوبك شغّل `claude setup-token`، وانسخ **الرمز وحده** (سطر واحد يبدأ بـ `sk-ant-oat`) إلى سرّ باسم `CLAUDE_CODE_OAUTH_TOKEN`. إن نسخت معه باقي النص أو انقسم الرمز على عدة أسطر، يستخرج الفحص الرمز بنفسه ويعرض تنبيهاً؛ وإن لم يجد رمزاً صالحاً يفشل برسالة «CLAUDE_CODE_OAUTH_TOKEN is malformed».
+- **أو بمفتاح API:** أنشئ مفتاحاً من https://console.anthropic.com وضعه في سرّ باسم `ANTHROPIC_API_KEY`.
+
+الرمز الصحيح طويل (أكثر من 100 حرف) ويبدأ بـ `sk-ant-oat01-`. إن رأيت `sk-ant-oat01-` تليها نقاط أو نجوم أو `…` فقط، فهذه نسخة مخفية من الرمز وليست الرمز نفسه، ولن تعمل.
+إن أضفت `ANTHROPIC_API_KEY` وكان `CLAUDE_CODE_OAUTH_TOKEN` تالفاً، تتجاهله المراجعة وتستخدم مفتاح API مع تنبيه.
+
+بدون أحدهما يمرّ فحص «Claude code review» دون مراجعة، مع ملاحظة «Claude review skipped» في صفحة الفحص.
+
+## من هاتف أندرويد (دون حاسوب)
+لا يعمل Claude Code على أندرويد مباشرة ولا في Termux، فهو يُوزَّع لأنظمة Linux وmacOS وWindows فقط.
+شغّله إذن في GitHub Codespaces، وهو حاسوب Linux سحابي يفتح في متصفح الهاتف. السكربت `scripts/save-claude-token.sh`
+ينشئ الرمز ويتحقق منه ويحفظه سراً بنفسه، فلا تحتاج إلى نسخ الرمز الطويل من الشاشة:
+
+1. افتح في Chrome: https://codespaces.new/Mohammadzxzx1991/Mohammad-Ahmed-Ghannam ثم اضغط **Create codespace**.
+   إن ظهرت الواجهة مشوّهة، فعّل «موقع سطح المكتب» من قائمة Chrome (⋮ ← Desktop site).
+2. في الطرفية أسفل الصفحة اكتب: `bash scripts/save-claude-token.sh`
+3. افتح الرابط الذي يظهر، وسجّل الدخول إلى Claude ووافق، ثم انسخ الرمز الذي تعرضه الصفحة والصقه في الطرفية.
+4. إن طلب تسجيل الدخول إلى GitHub، يعرض رمزاً من 8 خانات: افتح https://github.com/login/device واكتبه ووافق.
+5. يتحقق السكربت من أن Claude يقبل الرمز، ثم يحفظه ويكتب «Done».
+6. احذف الـ Codespace بعد ذلك من https://github.com/codespaces.
+
+## ملاحظات
+- التعليقات تظهر باسم `github-actions`، لأن الـ workflow يستخدم الرمز المدمج في GitHub بدل تطبيق Claude؛ هكذا تعمل المراجعة أيضاً على الـ PR التي تعدّل ملفات الـ workflows.
+- كل مراجعة تستهلك من اشتراكك أو رصيد الـ API.
+- طلب مراجعة بتعليق (مثل «Leave and review») لا يشغّل شيئاً؛ المراجعة تبدأ تلقائياً مع كل push.
